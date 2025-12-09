@@ -17,7 +17,7 @@ interface DisclaimerModalProps {
 export function DisclaimerModal({ open, onAccept }: DisclaimerModalProps) {
   return (
     <Dialog open={open}>
-      <DialogContent className="sm:max-w-md gradient-border animate-scale-in [&>button]:hidden">
+      <DialogContent className="sm:max-w-md gradient-border animate-scale-in [&>button]:hidden max-h-[90vh] overflow-y-auto">
         <DialogHeader className="text-center">
           <div className="mx-auto mb-4 w-16 h-16 rounded-2xl bg-neon-gradient flex items-center justify-center neon-glow">
             <Sparkles className="w-8 h-8 text-white" />
