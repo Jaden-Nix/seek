@@ -3,13 +3,14 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
-import { Sparkles, Volume2, Wand2, Zap, RefreshCw } from "lucide-react";
+import { Sparkles, Volume2, Wand2, Zap, RefreshCw, Camera, Video } from "lucide-react";
 import type { Effect, AudioEffect } from "@/pages/home";
 
 interface EffectsPanelProps {
   faceEffects: Effect[];
   audioEffects: AudioEffect[];
   onToggleEffect: (id: string) => void;
+  onUpdateFaceEffectIntensity: (id: string, intensity: number) => void;
   onUpdateAudioEffect: (id: string, value: number) => void;
 }
 
@@ -18,12 +19,17 @@ const effectIcons: Record<string, typeof Sparkles> = {
   aging: Wand2,
   beauty: Sparkles,
   expression: Zap,
+  vintage: Camera,
+  noir: Video,
+  glow: Sparkles,
+  sharpen: Zap,
 };
 
 export function EffectsPanel({
   faceEffects,
   audioEffects,
   onToggleEffect,
+  onUpdateFaceEffectIntensity,
   onUpdateAudioEffect,
 }: EffectsPanelProps) {
   return (
@@ -50,7 +56,7 @@ export function EffectsPanel({
                   key={effect.id}
                   onClick={() => onToggleEffect(effect.id)}
                   className={cn(
-                    "relative p-4 rounded-xl border transition-all duration-200 flex flex-col items-center gap-2",
+                    "relative p-3 rounded-xl border transition-all duration-200 flex flex-col items-center gap-1",
                     "hover-elevate active-elevate-2",
                     effect.active
                       ? "border-neon-purple/50 bg-neon-purple/10"
@@ -59,29 +65,54 @@ export function EffectsPanel({
                   data-testid={`button-effect-${effect.id}`}
                 >
                   <div className={cn(
-                    "w-10 h-10 rounded-lg flex items-center justify-center transition-colors",
+                    "w-8 h-8 rounded-lg flex items-center justify-center transition-colors",
                     effect.active ? "bg-neon-purple/20" : "bg-muted"
                   )}>
                     <Icon className={cn(
-                      "w-5 h-5 transition-colors",
+                      "w-4 h-4 transition-colors",
                       effect.active ? "text-neon-purple" : "text-muted-foreground"
                     )} />
                   </div>
                   <span className={cn(
-                    "text-xs font-medium transition-colors",
+                    "text-xs font-medium transition-colors text-center leading-tight",
                     effect.active ? "text-neon-purple" : "text-muted-foreground"
                   )}>
                     {effect.name}
                   </span>
                   {effect.active && (
-                    <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-neon-purple animate-pulse" />
+                    <div className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-neon-purple animate-pulse" />
                   )}
                 </button>
               );
             })}
           </div>
+          
+          {faceEffects.some(e => e.active) && (
+            <div className="pt-3 border-t border-border space-y-3">
+              <h4 className="text-xs font-medium text-muted-foreground">Intensity Controls</h4>
+              {faceEffects.filter(e => e.active).map((effect) => (
+                <div key={effect.id} className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-medium">{effect.name}</span>
+                    <span className="text-xs text-muted-foreground tabular-nums">{effect.intensity}%</span>
+                  </div>
+                  <Slider
+                    value={[effect.intensity]}
+                    min={0}
+                    max={100}
+                    step={5}
+                    onValueChange={([value]) => onUpdateFaceEffectIntensity(effect.id, value)}
+                    onClick={(e) => e.stopPropagation()}
+                    className="w-full"
+                    data-testid={`slider-intensity-${effect.id}`}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+          
           <p className="text-xs text-muted-foreground text-center pt-2">
-            Click effects to toggle them on/off
+            Click effects to toggle, adjust intensity with sliders
           </p>
         </TabsContent>
 

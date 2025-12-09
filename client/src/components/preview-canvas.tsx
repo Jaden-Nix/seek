@@ -86,22 +86,36 @@ export function PreviewCanvas({
         const filters: string[] = [];
         let alpha = 1;
         
-        if (activeEffects.some(e => e.id === "beauty")) {
-          filters.push("contrast(1.1)", "brightness(1.05)", "saturate(1.1)");
-        }
-
-        if (activeEffects.some(e => e.id === "aging")) {
-          filters.push("sepia(0.3)", "contrast(1.1)", "brightness(0.9)");
-        }
-
-        if (activeEffects.some(e => e.id === "expression")) {
-          filters.push("hue-rotate(10deg)", "saturate(1.2)");
-        }
-
-        if (activeEffects.some(e => e.id === "faceswap")) {
-          alpha = 0.85;
-          filters.push("blur(1px)");
-        }
+        activeEffects.forEach(effect => {
+          const mult = effect.intensity / 100;
+          switch (effect.id) {
+            case "beauty":
+              filters.push(`contrast(${1 + 0.2 * mult})`, `brightness(${1 + 0.1 * mult})`, `saturate(${1 + 0.2 * mult})`);
+              break;
+            case "aging":
+              filters.push(`sepia(${0.6 * mult})`, `contrast(${1 + 0.2 * mult})`, `brightness(${1 - 0.2 * mult})`);
+              break;
+            case "expression":
+              filters.push(`hue-rotate(${20 * mult}deg)`, `saturate(${1 + 0.4 * mult})`);
+              break;
+            case "faceswap":
+              alpha = 1 - (0.3 * mult);
+              filters.push(`blur(${2 * mult}px)`);
+              break;
+            case "vintage":
+              filters.push(`sepia(${0.5 * mult})`, `saturate(${1 - 0.3 * mult})`, `contrast(${1 + 0.1 * mult})`);
+              break;
+            case "noir":
+              filters.push(`grayscale(${mult})`, `contrast(${1 + 0.3 * mult})`);
+              break;
+            case "glow":
+              filters.push(`brightness(${1 + 0.3 * mult})`, `saturate(${1 + 0.5 * mult})`);
+              break;
+            case "sharpen":
+              filters.push(`contrast(${1 + 0.3 * mult})`);
+              break;
+          }
+        });
         
         ctx.save();
         ctx.filter = filters.length > 0 ? filters.join(" ") : "none";
@@ -151,16 +165,46 @@ export function PreviewCanvas({
               alt="Preview"
               className={cn(
                 "w-full h-full object-contain transition-all duration-300",
-                faceEffects.find(e => e.id === "beauty" && e.active) && "drop-shadow-[0_0_15px_rgba(168,85,247,0.4)]"
+                faceEffects.find(e => e.id === "glow" && e.active) && "drop-shadow-[0_0_15px_rgba(168,85,247,0.4)]"
               )}
               style={{
-                filter: [
-                  faceEffects.find(e => e.id === "aging" && e.active) ? "sepia(0.3) contrast(1.1) brightness(0.9)" : "",
-                  faceEffects.find(e => e.id === "beauty" && e.active) ? "contrast(1.1) brightness(1.05) saturate(1.1)" : "",
-                  faceEffects.find(e => e.id === "expression" && e.active) ? "hue-rotate(10deg) saturate(1.2)" : "",
-                  faceEffects.find(e => e.id === "faceswap" && e.active) ? "blur(1px)" : "",
-                ].filter(Boolean).join(" ") || undefined,
-                opacity: faceEffects.find(e => e.id === "faceswap" && e.active) ? 0.85 : 1
+                filter: (() => {
+                  const filters: string[] = [];
+                  faceEffects.filter(e => e.active).forEach(effect => {
+                    const mult = effect.intensity / 100;
+                    switch (effect.id) {
+                      case "beauty":
+                        filters.push(`contrast(${1 + 0.2 * mult})`, `brightness(${1 + 0.1 * mult})`, `saturate(${1 + 0.2 * mult})`);
+                        break;
+                      case "aging":
+                        filters.push(`sepia(${0.6 * mult})`, `contrast(${1 + 0.2 * mult})`, `brightness(${1 - 0.2 * mult})`);
+                        break;
+                      case "expression":
+                        filters.push(`hue-rotate(${20 * mult}deg)`, `saturate(${1 + 0.4 * mult})`);
+                        break;
+                      case "faceswap":
+                        filters.push(`blur(${2 * mult}px)`);
+                        break;
+                      case "vintage":
+                        filters.push(`sepia(${0.5 * mult})`, `saturate(${1 - 0.3 * mult})`, `contrast(${1 + 0.1 * mult})`);
+                        break;
+                      case "noir":
+                        filters.push(`grayscale(${mult})`, `contrast(${1 + 0.3 * mult})`);
+                        break;
+                      case "glow":
+                        filters.push(`brightness(${1 + 0.3 * mult})`, `saturate(${1 + 0.5 * mult})`);
+                        break;
+                      case "sharpen":
+                        filters.push(`contrast(${1 + 0.3 * mult})`);
+                        break;
+                    }
+                  });
+                  return filters.length > 0 ? filters.join(" ") : undefined;
+                })(),
+                opacity: (() => {
+                  const faceswap = faceEffects.find(e => e.id === "faceswap" && e.active);
+                  return faceswap ? 1 - (0.3 * faceswap.intensity / 100) : 1;
+                })()
               }}
               data-testid="img-preview"
             />

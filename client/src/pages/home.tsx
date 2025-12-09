@@ -34,6 +34,7 @@ export type Effect = {
   name: string;
   icon: typeof Sparkles;
   active: boolean;
+  intensity: number;
 };
 
 export type AudioEffect = {
@@ -59,10 +60,14 @@ export default function Home() {
   const [webcamEnabled, setWebcamEnabled] = useState(false);
   
   const [faceEffects, setFaceEffects] = useState<Effect[]>([
-    { id: "faceswap", name: "Face Swap", icon: RefreshCw, active: false },
-    { id: "aging", name: "Aging", icon: Wand2, active: false },
-    { id: "beauty", name: "Beauty Filter", icon: Sparkles, active: false },
-    { id: "expression", name: "Expression Morph", icon: Zap, active: false },
+    { id: "faceswap", name: "Face Swap", icon: RefreshCw, active: false, intensity: 50 },
+    { id: "aging", name: "Aging", icon: Wand2, active: false, intensity: 50 },
+    { id: "beauty", name: "Beauty Filter", icon: Sparkles, active: false, intensity: 50 },
+    { id: "expression", name: "Expression Morph", icon: Zap, active: false, intensity: 50 },
+    { id: "vintage", name: "Vintage", icon: Camera, active: false, intensity: 50 },
+    { id: "noir", name: "Film Noir", icon: Video, active: false, intensity: 50 },
+    { id: "glow", name: "Neon Glow", icon: Sparkles, active: false, intensity: 50 },
+    { id: "sharpen", name: "Sharpen", icon: Zap, active: false, intensity: 50 },
   ]);
 
   const [audioEffects, setAudioEffects] = useState<AudioEffect[]>([
@@ -111,6 +116,12 @@ export default function Home() {
   const toggleEffect = useCallback((effectId: string) => {
     setFaceEffects(prev => prev.map(effect => 
       effect.id === effectId ? { ...effect, active: !effect.active } : effect
+    ));
+  }, []);
+
+  const updateFaceEffectIntensity = useCallback((effectId: string, intensity: number) => {
+    setFaceEffects(prev => prev.map(effect =>
+      effect.id === effectId ? { ...effect, intensity } : effect
     ));
   }, []);
 
@@ -169,19 +180,36 @@ export default function Home() {
           const filters: string[] = [];
           let alpha = 1;
           
-          if (activeEffects.some(e => e.id === "beauty")) {
-            filters.push("contrast(1.1)", "brightness(1.05)", "saturate(1.1)");
-          }
-          if (activeEffects.some(e => e.id === "aging")) {
-            filters.push("sepia(0.3)", "contrast(1.1)", "brightness(0.9)");
-          }
-          if (activeEffects.some(e => e.id === "expression")) {
-            filters.push("hue-rotate(10deg)", "saturate(1.2)");
-          }
-          if (activeEffects.some(e => e.id === "faceswap")) {
-            alpha = 0.85;
-            filters.push("blur(1px)");
-          }
+          activeEffects.forEach(effect => {
+            const mult = effect.intensity / 100;
+            switch (effect.id) {
+              case "beauty":
+                filters.push(`contrast(${1 + 0.2 * mult})`, `brightness(${1 + 0.1 * mult})`, `saturate(${1 + 0.2 * mult})`);
+                break;
+              case "aging":
+                filters.push(`sepia(${0.6 * mult})`, `contrast(${1 + 0.2 * mult})`, `brightness(${1 - 0.2 * mult})`);
+                break;
+              case "expression":
+                filters.push(`hue-rotate(${20 * mult}deg)`, `saturate(${1 + 0.4 * mult})`);
+                break;
+              case "faceswap":
+                alpha = 1 - (0.3 * mult);
+                filters.push(`blur(${2 * mult}px)`);
+                break;
+              case "vintage":
+                filters.push(`sepia(${0.5 * mult})`, `saturate(${1 - 0.3 * mult})`, `contrast(${1 + 0.1 * mult})`);
+                break;
+              case "noir":
+                filters.push(`grayscale(${mult})`, `contrast(${1 + 0.3 * mult})`);
+                break;
+              case "glow":
+                filters.push(`brightness(${1 + 0.3 * mult})`, `saturate(${1 + 0.5 * mult})`);
+                break;
+              case "sharpen":
+                filters.push(`contrast(${1 + 0.3 * mult})`);
+                break;
+            }
+          });
           
           ctx.filter = filters.length > 0 ? filters.join(" ") : "none";
           ctx.globalAlpha = alpha;
@@ -352,6 +380,7 @@ export default function Home() {
               faceEffects={faceEffects}
               audioEffects={audioEffects}
               onToggleEffect={toggleEffect}
+              onUpdateFaceEffectIntensity={updateFaceEffectIntensity}
               onUpdateAudioEffect={updateAudioEffect}
             />
           </aside>
