@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { ShareModal } from "@/components/share-modal";
 import { cn } from "@/lib/utils";
 import { 
   Play, 
@@ -12,7 +14,8 @@ import {
   Mic,
   Image,
   Check,
-  Loader2
+  Loader2,
+  Share2
 } from "lucide-react";
 
 interface ControlBarProps {
@@ -34,10 +37,16 @@ export function ControlBar({
   onStopPrank,
   onExport,
 }: ControlBarProps) {
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  
   const hasPhoto = !!uploadedPhoto;
   const hasAudio = !!audioUrl;
   const canStart = hasPhoto;
   const canExport = hasPhoto || hasAudio;
+  
+  const handleExportForShare = async () => {
+    await onExport();
+  };
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-40">
@@ -147,6 +156,16 @@ export function ControlBar({
                   </TooltipContent>
                 )}
               </Tooltip>
+
+              <Button
+                onClick={() => setShareModalOpen(true)}
+                variant="outline"
+                className="gap-2"
+                data-testid="button-share"
+              >
+                <Share2 className="w-4 h-4" />
+                Share
+              </Button>
             </div>
 
             <div className="hidden md:flex items-center gap-2 text-xs text-muted-foreground" data-testid="text-ready-status">
@@ -156,6 +175,15 @@ export function ControlBar({
           </div>
         </div>
       </div>
+      
+      <ShareModal
+        open={shareModalOpen}
+        onOpenChange={setShareModalOpen}
+        hasPhoto={hasPhoto}
+        hasAudio={hasAudio}
+        onExportForShare={handleExportForShare}
+        isExporting={isExporting}
+      />
     </div>
   );
 }
