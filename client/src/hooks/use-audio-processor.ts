@@ -14,6 +14,7 @@ export function useAudioProcessor() {
   const reverbGainRef = useRef<GainNode | null>(null);
   const dryGainRef = useRef<GainNode | null>(null);
   const audioBufferRef = useRef<AudioBuffer | null>(null);
+  const currentUrlRef = useRef<string | null>(null);
   
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -51,6 +52,7 @@ export function useAudioProcessor() {
       const arrayBuffer = await response.arrayBuffer();
       const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
       audioBufferRef.current = audioBuffer;
+      currentUrlRef.current = audioUrl;
       setDuration(audioBuffer.duration);
       return audioBuffer;
     } catch (error) {
@@ -94,9 +96,11 @@ export function useAudioProcessor() {
     }
 
     let buffer = audioBufferRef.current;
-    if (!buffer) {
+    if (!buffer || currentUrlRef.current !== audioUrl) {
       buffer = await loadAudio(audioUrl);
       if (!buffer) return;
+      pausedAtRef.current = 0;
+      setCurrentTime(0);
     }
 
     const pitchRate = Math.pow(2, effects.pitch / 12);
@@ -192,13 +196,22 @@ export function useAudioProcessor() {
     }
   }, []);
 
-  const cleanup = useCallback(() => {
+  const clearBuffer = useCallback(() => {
     stop();
+    audioBufferRef.current = null;
+    currentUrlRef.current = null;
+    setDuration(0);
+    setCurrentTime(0);
+    pausedAtRef.current = 0;
+  }, [stop]);
+
+  const cleanup = useCallback(() => {
+    clearBuffer();
     if (audioContextRef.current) {
       audioContextRef.current.close();
       audioContextRef.current = null;
     }
-  }, [stop]);
+  }, [clearBuffer]);
 
   return {
     isPlaying,
@@ -209,6 +222,7 @@ export function useAudioProcessor() {
     stop,
     pause,
     updateEffects,
+    clearBuffer,
     cleanup
   };
 }

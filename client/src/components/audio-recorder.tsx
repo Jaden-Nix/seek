@@ -224,6 +224,18 @@ export function AudioRecorder({
     }
   }, [audioProcessor.isPlaying, audioProcessor.currentTime, audioProcessor.duration]);
 
+  useEffect(() => {
+    if (!audioUrl) {
+      audioProcessor.clearBuffer();
+    }
+  }, [audioUrl, audioProcessor.clearBuffer]);
+
+  useEffect(() => {
+    return () => {
+      audioProcessor.cleanup();
+    };
+  }, [audioProcessor.cleanup]);
+
   const togglePlayback = useCallback(async () => {
     if (!audioUrl) return;
     
