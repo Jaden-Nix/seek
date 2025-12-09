@@ -14,10 +14,10 @@ interface EffectsPanelProps {
 }
 
 const effectIcons: Record<string, typeof Sparkles> = {
-  distort: Zap,
-  glow: Sparkles,
-  pixelate: RefreshCw,
-  blur: Wand2,
+  faceswap: RefreshCw,
+  aging: Wand2,
+  beauty: Sparkles,
+  expression: Zap,
 };
 
 export function EffectsPanel({
@@ -94,6 +94,8 @@ export function EffectsPanel({
                 <span className="text-xs text-muted-foreground tabular-nums">
                   {effect.id === "pitch" 
                     ? `${effect.value > 0 ? "+" : ""}${effect.value} semitones`
+                    : effect.id === "voiceclone"
+                    ? `${effect.value}% clone`
                     : `${effect.value}%`}
                 </span>
               </div>

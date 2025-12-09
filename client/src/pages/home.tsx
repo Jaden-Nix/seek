@@ -59,15 +59,15 @@ export default function Home() {
   const [webcamEnabled, setWebcamEnabled] = useState(false);
   
   const [faceEffects, setFaceEffects] = useState<Effect[]>([
-    { id: "distort", name: "Distort", icon: Zap, active: false },
-    { id: "glow", name: "Neon Glow", icon: Sparkles, active: false },
-    { id: "pixelate", name: "Pixelate", icon: RefreshCw, active: false },
-    { id: "blur", name: "Motion Blur", icon: Wand2, active: false },
+    { id: "faceswap", name: "Face Swap", icon: RefreshCw, active: false },
+    { id: "aging", name: "Aging", icon: Wand2, active: false },
+    { id: "beauty", name: "Beauty Filter", icon: Sparkles, active: false },
+    { id: "expression", name: "Expression Morph", icon: Zap, active: false },
   ]);
 
   const [audioEffects, setAudioEffects] = useState<AudioEffect[]>([
     { id: "pitch", name: "Pitch Shift", value: 0, min: -12, max: 12, step: 1 },
-    { id: "echo", name: "Echo", value: 0, min: 0, max: 100, step: 5 },
+    { id: "voiceclone", name: "Voice Clone", value: 0, min: 0, max: 100, step: 5 },
     { id: "reverb", name: "Reverb", value: 0, min: 0, max: 100, step: 5 },
   ]);
 

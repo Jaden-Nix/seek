@@ -82,30 +82,33 @@ export function PreviewCanvas({
         canvas.width = videoRef.current.videoWidth;
         canvas.height = videoRef.current.videoHeight;
         
+        const activeEffects = faceEffects.filter(e => e.active);
+        const filters: string[] = [];
+        let alpha = 1;
+        
+        if (activeEffects.some(e => e.id === "beauty")) {
+          filters.push("contrast(1.1)", "brightness(1.05)", "saturate(1.1)");
+        }
+
+        if (activeEffects.some(e => e.id === "aging")) {
+          filters.push("sepia(0.3)", "contrast(1.1)", "brightness(0.9)");
+        }
+
+        if (activeEffects.some(e => e.id === "expression")) {
+          filters.push("hue-rotate(10deg)", "saturate(1.2)");
+        }
+
+        if (activeEffects.some(e => e.id === "faceswap")) {
+          alpha = 0.85;
+          filters.push("blur(1px)");
+        }
+        
         ctx.save();
+        ctx.filter = filters.length > 0 ? filters.join(" ") : "none";
+        ctx.globalAlpha = alpha;
         ctx.scale(-1, 1);
         ctx.drawImage(videoRef.current, -canvas.width, 0, canvas.width, canvas.height);
         ctx.restore();
-
-        const activeEffects = faceEffects.filter(e => e.active);
-        
-        if (activeEffects.some(e => e.id === "glow")) {
-          ctx.shadowColor = "rgba(168, 85, 247, 0.6)";
-          ctx.shadowBlur = 20;
-        }
-
-        if (activeEffects.some(e => e.id === "pixelate")) {
-          const pixelSize = 8;
-          const tempCanvas = document.createElement("canvas");
-          const tempCtx = tempCanvas.getContext("2d");
-          if (tempCtx) {
-            tempCanvas.width = canvas.width / pixelSize;
-            tempCanvas.height = canvas.height / pixelSize;
-            tempCtx.drawImage(canvas, 0, 0, tempCanvas.width, tempCanvas.height);
-            ctx.imageSmoothingEnabled = false;
-            ctx.drawImage(tempCanvas, 0, 0, tempCanvas.width, tempCanvas.height, 0, 0, canvas.width, canvas.height);
-          }
-        }
       }
       animationId = requestAnimationFrame(draw);
     };
@@ -148,16 +151,16 @@ export function PreviewCanvas({
               alt="Preview"
               className={cn(
                 "w-full h-full object-contain transition-all duration-300",
-                faceEffects.find(e => e.id === "glow" && e.active) && "drop-shadow-[0_0_20px_rgba(168,85,247,0.5)]",
-                faceEffects.find(e => e.id === "blur" && e.active) && "blur-[2px]"
+                faceEffects.find(e => e.id === "beauty" && e.active) && "drop-shadow-[0_0_15px_rgba(168,85,247,0.4)]"
               )}
               style={{
-                filter: faceEffects.find(e => e.id === "distort" && e.active) 
-                  ? "hue-rotate(30deg) saturate(1.3)" 
-                  : undefined,
-                imageRendering: faceEffects.find(e => e.id === "pixelate" && e.active)
-                  ? "pixelated"
-                  : undefined
+                filter: [
+                  faceEffects.find(e => e.id === "aging" && e.active) ? "sepia(0.3) contrast(1.1) brightness(0.9)" : "",
+                  faceEffects.find(e => e.id === "beauty" && e.active) ? "contrast(1.1) brightness(1.05) saturate(1.1)" : "",
+                  faceEffects.find(e => e.id === "expression" && e.active) ? "hue-rotate(10deg) saturate(1.2)" : "",
+                  faceEffects.find(e => e.id === "faceswap" && e.active) ? "blur(1px)" : "",
+                ].filter(Boolean).join(" ") || undefined,
+                opacity: faceEffects.find(e => e.id === "faceswap" && e.active) ? 0.85 : 1
               }}
               data-testid="img-preview"
             />
