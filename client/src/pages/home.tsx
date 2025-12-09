@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -147,13 +147,90 @@ export default function Home() {
 
   const handleExport = useCallback(async () => {
     setIsExporting(true);
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    try {
+      if (uploadedPhoto) {
+        const img = new window.Image();
+        img.crossOrigin = "anonymous";
+        
+        await new Promise<void>((resolve, reject) => {
+          img.onload = () => resolve();
+          img.onerror = reject;
+          img.src = uploadedPhoto;
+        });
+
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext("2d");
+        
+        if (ctx) {
+          const activeEffects = faceEffects.filter(e => e.active);
+          const filters: string[] = [];
+          let alpha = 1;
+          
+          if (activeEffects.some(e => e.id === "beauty")) {
+            filters.push("contrast(1.1)", "brightness(1.05)", "saturate(1.1)");
+          }
+          if (activeEffects.some(e => e.id === "aging")) {
+            filters.push("sepia(0.3)", "contrast(1.1)", "brightness(0.9)");
+          }
+          if (activeEffects.some(e => e.id === "expression")) {
+            filters.push("hue-rotate(10deg)", "saturate(1.2)");
+          }
+          if (activeEffects.some(e => e.id === "faceswap")) {
+            alpha = 0.85;
+            filters.push("blur(1px)");
+          }
+          
+          ctx.filter = filters.length > 0 ? filters.join(" ") : "none";
+          ctx.globalAlpha = alpha;
+          ctx.drawImage(img, 0, 0);
+          
+          canvas.toBlob((blob) => {
+            if (blob) {
+              const url = URL.createObjectURL(blob);
+              const link = document.createElement("a");
+              link.href = url;
+              link.download = `seek-prank-${Date.now()}.png`;
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+              URL.revokeObjectURL(url);
+            }
+          }, "image/png");
+        }
+        
+        toast({
+          title: "Image Exported",
+          description: "Your processed image has been downloaded!",
+        });
+      } else if (audioBlob) {
+        const url = URL.createObjectURL(audioBlob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `seek-audio-${Date.now()}.webm`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        
+        toast({
+          title: "Audio Exported",
+          description: "Your audio clip has been downloaded!",
+        });
+      }
+    } catch (error) {
+      console.error("Export error:", error);
+      toast({
+        title: "Export Failed",
+        description: "There was an error exporting your content.",
+        variant: "destructive",
+      });
+    }
+    
     setIsExporting(false);
-    toast({
-      title: "Export Complete",
-      description: "Your prank clip has been saved!",
-    });
-  }, [toast]);
+  }, [toast, uploadedPhoto, audioBlob, faceEffects]);
 
   return (
     <div className="min-h-screen bg-background noise-overlay">
@@ -235,6 +312,11 @@ export default function Home() {
                     onClear={() => {
                       setAudioBlob(null);
                       setAudioUrl(null);
+                    }}
+                    audioEffects={{
+                      pitch: audioEffects.find(e => e.id === "pitch")?.value ?? 0,
+                      voiceclone: audioEffects.find(e => e.id === "voiceclone")?.value ?? 0,
+                      reverb: audioEffects.find(e => e.id === "reverb")?.value ?? 0,
                     }}
                   />
                 </TabsContent>
