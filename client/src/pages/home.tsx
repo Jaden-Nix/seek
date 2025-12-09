@@ -46,6 +46,81 @@ export type AudioEffect = {
   step: number;
 };
 
+export type EffectPreset = {
+  id: string;
+  name: string;
+  effects: { id: string; intensity: number }[];
+  isCustom: boolean;
+};
+
+const builtInPresets: EffectPreset[] = [
+  {
+    id: "spooky",
+    name: "Spooky",
+    effects: [
+      { id: "aging", intensity: 70 },
+      { id: "noir", intensity: 40 },
+    ],
+    isCustom: false,
+  },
+  {
+    id: "vintage-film",
+    name: "Vintage Film",
+    effects: [
+      { id: "vintage", intensity: 80 },
+      { id: "aging", intensity: 30 },
+    ],
+    isCustom: false,
+  },
+  {
+    id: "glamour",
+    name: "Glamour",
+    effects: [
+      { id: "beauty", intensity: 70 },
+      { id: "glow", intensity: 50 },
+    ],
+    isCustom: false,
+  },
+  {
+    id: "dramatic",
+    name: "Dramatic",
+    effects: [
+      { id: "noir", intensity: 60 },
+      { id: "sharpen", intensity: 70 },
+    ],
+    isCustom: false,
+  },
+  {
+    id: "dreamy",
+    name: "Dreamy",
+    effects: [
+      { id: "glow", intensity: 80 },
+      { id: "beauty", intensity: 40 },
+    ],
+    isCustom: false,
+  },
+];
+
+function loadCustomPresets(): EffectPreset[] {
+  try {
+    const stored = localStorage.getItem("seek-custom-presets");
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch (e) {
+    console.error("Failed to load custom presets:", e);
+  }
+  return [];
+}
+
+function saveCustomPresets(presets: EffectPreset[]) {
+  try {
+    localStorage.setItem("seek-custom-presets", JSON.stringify(presets));
+  } catch (e) {
+    console.error("Failed to save custom presets:", e);
+  }
+}
+
 export default function Home() {
   const { toast } = useToast();
   const [showDisclaimer, setShowDisclaimer] = useState(true);
@@ -58,6 +133,8 @@ export default function Home() {
   const [isExporting, setIsExporting] = useState(false);
   const [activeTab, setActiveTab] = useState("photo");
   const [webcamEnabled, setWebcamEnabled] = useState(false);
+  const [customPresets, setCustomPresets] = useState<EffectPreset[]>(() => loadCustomPresets());
+  const [activePresetId, setActivePresetId] = useState<string | null>(null);
   
   const [faceEffects, setFaceEffects] = useState<Effect[]>([
     { id: "faceswap", name: "Face Swap", icon: RefreshCw, active: false, intensity: 50 },
@@ -129,6 +206,69 @@ export default function Home() {
     setAudioEffects(prev => prev.map(effect =>
       effect.id === effectId ? { ...effect, value } : effect
     ));
+  }, []);
+
+  const allPresets = [...builtInPresets, ...customPresets];
+
+  const applyPreset = useCallback((preset: EffectPreset) => {
+    setFaceEffects(prev => prev.map(effect => {
+      const presetEffect = preset.effects.find(pe => pe.id === effect.id);
+      if (presetEffect) {
+        return { ...effect, active: true, intensity: presetEffect.intensity };
+      }
+      return { ...effect, active: false };
+    }));
+    setActivePresetId(preset.id);
+    toast({
+      title: `"${preset.name}" Applied`,
+      description: "Preset effects have been applied to your photo.",
+    });
+  }, [toast]);
+
+  const saveAsPreset = useCallback((name: string) => {
+    const activeEffects = faceEffects.filter(e => e.active);
+    if (activeEffects.length === 0) {
+      toast({
+        title: "No effects active",
+        description: "Please activate at least one effect before saving a preset.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const newPreset: EffectPreset = {
+      id: `custom-${Date.now()}`,
+      name,
+      effects: activeEffects.map(e => ({ id: e.id, intensity: e.intensity })),
+      isCustom: true,
+    };
+
+    const updatedPresets = [...customPresets, newPreset];
+    setCustomPresets(updatedPresets);
+    saveCustomPresets(updatedPresets);
+    setActivePresetId(newPreset.id);
+    toast({
+      title: "Preset Saved",
+      description: `"${name}" has been saved to your custom presets.`,
+    });
+  }, [faceEffects, customPresets, toast]);
+
+  const deletePreset = useCallback((presetId: string) => {
+    const updatedPresets = customPresets.filter(p => p.id !== presetId);
+    setCustomPresets(updatedPresets);
+    saveCustomPresets(updatedPresets);
+    if (activePresetId === presetId) {
+      setActivePresetId(null);
+    }
+    toast({
+      title: "Preset Deleted",
+      description: "Your custom preset has been removed.",
+    });
+  }, [customPresets, activePresetId, toast]);
+
+  const clearEffects = useCallback(() => {
+    setFaceEffects(prev => prev.map(effect => ({ ...effect, active: false, intensity: 50 })));
+    setActivePresetId(null);
   }, []);
 
   const startPrankMode = useCallback(() => {
@@ -382,6 +522,12 @@ export default function Home() {
               onToggleEffect={toggleEffect}
               onUpdateFaceEffectIntensity={updateFaceEffectIntensity}
               onUpdateAudioEffect={updateAudioEffect}
+              presets={allPresets}
+              activePresetId={activePresetId}
+              onApplyPreset={applyPreset}
+              onSavePreset={saveAsPreset}
+              onDeletePreset={deletePreset}
+              onClearEffects={clearEffects}
             />
           </aside>
         </div>
