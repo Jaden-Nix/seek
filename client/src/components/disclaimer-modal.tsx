@@ -7,7 +7,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, Sparkles, Shield } from "lucide-react";
+import { AlertTriangle, Sparkles } from "lucide-react";
 
 interface DisclaimerModalProps {
   open: boolean;
@@ -17,54 +17,26 @@ interface DisclaimerModalProps {
 export function DisclaimerModal({ open, onAccept }: DisclaimerModalProps) {
   return (
     <Dialog open={open}>
-      <DialogContent className="sm:max-w-md gradient-border animate-scale-in [&>button]:hidden max-h-[80vh] overflow-y-auto mx-4 w-[calc(100%-2rem)]">
-        <DialogHeader className="text-center">
-          <div className="mx-auto mb-4 w-16 h-16 rounded-2xl bg-neon-gradient flex items-center justify-center neon-glow">
-            <Sparkles className="w-8 h-8 text-white" />
+      <DialogContent 
+        className="gradient-border animate-scale-in [&>button]:hidden !fixed !top-1/2 !left-1/2 !-translate-x-1/2 !-translate-y-1/2 w-[85vw] max-w-xs p-4"
+      >
+        <DialogHeader className="text-center pb-2">
+          <div className="mx-auto mb-2 w-10 h-10 rounded-xl bg-neon-gradient flex items-center justify-center neon-glow">
+            <Sparkles className="w-5 h-5 text-white" />
           </div>
-          <DialogTitle className="font-display text-2xl text-center gradient-text" data-testid="text-disclaimer-title">
+          <DialogTitle className="font-display text-lg text-center gradient-text" data-testid="text-disclaimer-title">
             Welcome to Seek
           </DialogTitle>
-          <DialogDescription className="text-center text-muted-foreground mt-2">
-            Your creative effects playground
+          <DialogDescription className="text-center text-muted-foreground text-xs">
+            Creative effects playground
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
-          <div className="flex gap-3 p-4 rounded-lg bg-amber-500/10 border border-amber-500/20">
-            <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
-            <div className="space-y-1">
-              <p className="text-sm font-medium text-amber-200">Important Notice</p>
-              <p className="text-xs text-muted-foreground">
-                This app is for fun pranks and creative content only. Always get consent before sharing content featuring others.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex gap-3 p-4 rounded-lg bg-card border border-border">
-            <Shield className="w-5 h-5 text-neon-purple shrink-0 mt-0.5" />
-            <div className="space-y-1">
-              <p className="text-sm font-medium">Your Privacy</p>
-              <p className="text-xs text-muted-foreground">
-                All processing happens locally in your browser. Your photos and audio never leave your device.
-              </p>
-            </div>
-          </div>
-
-          <ul className="space-y-2 text-sm text-muted-foreground pl-4">
-            <li className="flex items-start gap-2">
-              <span className="text-neon-purple mt-1">•</span>
-              <span>Outputs are altered content - use responsibly</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-neon-blue mt-1">•</span>
-              <span>Do not use for deception or harmful purposes</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-neon-cyan mt-1">•</span>
-              <span>Respect others' likeness and voice rights</span>
-            </li>
-          </ul>
+        <div className="flex gap-2 p-2 rounded-lg bg-amber-500/10 border border-amber-500/20 mb-3">
+          <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
+          <p className="text-xs text-muted-foreground">
+            For fun pranks only. All processing is local and private. Use responsibly.
+          </p>
         </div>
 
         <DialogFooter>
@@ -73,7 +45,7 @@ export function DisclaimerModal({ open, onAccept }: DisclaimerModalProps) {
             className="w-full bg-neon-gradient text-white font-semibold"
             data-testid="button-accept-disclaimer"
           >
-            I Understand - Let's Create!
+            Got it!
           </Button>
         </DialogFooter>
       </DialogContent>
